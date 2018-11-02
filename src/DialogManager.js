@@ -1,9 +1,9 @@
 // @flow
 
-import React from 'react';
-import RootSiblings from 'react-native-root-siblings';
+import React from "react";
+import RootSiblings from "react-native-root-siblings";
 
-import DialogComponent from './DialogComponent';
+import DialogComponent from "./DialogComponent";
 
 const DESTROY_TIMEOUT: number = 500;
 
@@ -18,55 +18,77 @@ class DialogManager {
 
   add(props, callback): void {
     const dialog = new RootSiblings(
-      <DialogComponent
-        {...props}
-        onDismissed={() => { this.onDialogDismissed(props.onDismissed); }}
-      />,
-      callback,
+      (
+        <DialogComponent
+          {...props}
+          onDismissed={() => {
+            this.onDialogDismissed(props.onDismissed);
+          }}
+        />
+      ),
+      callback
     );
     this.dialogs.push(dialog);
   }
 
   destroy(): void {
     const dialog = this.dialogs.pop();
-    setTimeout(() => {
-      dialog.destroy();
-    }, DESTROY_TIMEOUT);
+
+    if (dialog) {
+      setTimeout(() => {
+        try {
+          dialog.destroy();
+        } catch (e) {
+          console.log(
+            "[DialogManager]: An error occurred when trying to destroy dialog: ",
+            e
+          );
+        }
+      }, DESTROY_TIMEOUT);
+    }
   }
 
   onDialogDismissed = (onDismissed?: Function = () => {}): void => {
     onDismissed();
     this.destroy();
-  }
+  };
 
   update = (props: Object, callback?: Function = () => {}): void => {
     this.currentDialog.update(
       <DialogComponent
         {...props}
-        onDismissed={() => { this.onDialogDismissed(props.onDismissed); }}
+        onDismissed={() => {
+          this.onDialogDismissed(props.onDismissed);
+        }}
       />,
-      callback,
+      callback
     );
-  }
+  };
 
   show = (props: Object, callback?: Function = () => {}): void => {
-    this.add({
-      ...props,
-      show: true,
-    }, callback);
-  }
+    this.add(
+      {
+        ...props,
+        show: true
+      },
+      callback
+    );
+  };
 
   dismiss = (callback?: Function = () => {}): void => {
-    this.update({
-      show: false,
-    }, callback);
-  }
+    this.update(
+      {
+        show: false
+      },
+      callback
+    );
+  };
 
   dismissAll = (callback?: Function = () => {}): void => {
     this.dialogs.forEach(() => {
       this.dismiss(callback);
     });
-  }
+  };
 }
 
 export default DialogManager;
